@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px 'Helvetica Neue'; color: #e7e7e7; -webkit-text-stroke: #e7e7e7; background-color: #121212}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px 'Helvetica Neue'; color: #e7e7e7; -webkit-text-stroke: #e7e7e7; background-color: #121212; min-height: 18.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;title&gt;STOMP WebSocket Client Test&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Include SockJS and Stomp.js libraries from a CDN --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;style&gt;</span></p>
+<p class="p1"><span class="s1">body { font-family: Arial, sans-serif; margin: 20px; }</span></p>
+<p class="p1"><span class="s1">#conversationDiv { margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }</span></p>
+<p class="p1"><span class="s1">input[type="text"] { width: 300px; }</span></p>
+<p class="p1"><span class="s1">button { margin: 5px; }</span></p>
+<p class="p1"><span class="s1">&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;h2&gt;STOMP WebSocket Test Client&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button id="connectBtn" onclick="connect()"&gt;Connect&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button id="disconnectBtn" onclick="disconnect()" disabled&gt;Disconnect&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;input type="text" id="messageInput" placeholder="Type a message"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button onclick="sendMessage()"&gt;Send Message&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div id="conversationDiv"&gt;&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1">var stompClient = null;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Utility to update the UI based on connection status.</span></p>
+<p class="p1"><span class="s1">function setConnected(connected) {</span></p>
+<p class="p1"><span class="s1">document.getElementById("connectBtn").disabled = connected;</span></p>
+<p class="p1"><span class="s1">document.getElementById("disconnectBtn").disabled = !connected;</span></p>
+<p class="p1"><span class="s1">if (!connected) {</span></p>
+<p class="p1"><span class="s1">document.getElementById("conversationDiv").innerHTML = "";</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Connect to the WebSocket endpoint with SockJS and STOMP.</span></p>
+<p class="p1"><span class="s1">function connect() {</span></p>
+<p class="p1"><span class="s1">// Create a SockJS connection to the endpoint.</span></p>
+<p class="p1"><span class="s1">var socket = new SockJS('/gs-guide-websocket');</span></p>
+<p class="p1"><span class="s1">// Create a STOMP client over the SockJS connection.</span></p>
+<p class="p1"><span class="s1">stompClient = Stomp.over(socket);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Optional: disable debugging logs</span></p>
+<p class="p1"><span class="s1">stompClient.debug = null;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Connect; frame contains connection details.</span></p>
+<p class="p1"><span class="s1">stompClient.connect({}, function(frame) {</span></p>
+<p class="p1"><span class="s1">setConnected(true);</span></p>
+<p class="p1"><span class="s1">console.log('Connected: ' + frame);</span></p>
+<p class="p1"><span class="s1">// Subscribe to the destination where the server broadcasts messages.</span></p>
+<p class="p1"><span class="s1">stompClient.subscribe('/topic/greetings', function(messageOutput) {</span></p>
+<p class="p1"><span class="s1">// The message expected to be JSON, adjust parsing as needed.</span></p>
+<p class="p1"><span class="s1">var parsed = JSON.parse(messageOutput.body);</span></p>
+<p class="p1"><span class="s1">showMessage(parsed.content);</span></p>
+<p class="p1"><span class="s1">});</span></p>
+<p class="p1"><span class="s1">}, function(error) {</span></p>
+<p class="p1"><span class="s1">console.error('STOMP error: ' + error);</span></p>
+<p class="p1"><span class="s1">});</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Disconnect from the server.</span></p>
+<p class="p1"><span class="s1">function disconnect() {</span></p>
+<p class="p1"><span class="s1">if (stompClient !== null) {</span></p>
+<p class="p1"><span class="s1">stompClient.disconnect(function() {</span></p>
+<p class="p1"><span class="s1">setConnected(false);</span></p>
+<p class="p1"><span class="s1">console.log("Disconnected");</span></p>
+<p class="p1"><span class="s1">});</span></p>
+<p class="p1"><span class="s1">} else {</span></p>
+<p class="p1"><span class="s1">setConnected(false);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Send a message to the server.</span></p>
+<p class="p1"><span class="s1">function sendMessage() {</span></p>
+<p class="p1"><span class="s1">var message = document.getElementById("messageInput").value;</span></p>
+<p class="p1"><span class="s1">// Sending a JSON message; adjust the payload as per your server’s expected format.</span></p>
+<p class="p1"><span class="s1">stompClient.send("/app/hello", {}, JSON.stringify({'message': message}));</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Append a received message to the conversation area.</span></p>
+<p class="p1"><span class="s1">function showMessage(message) {</span></p>
+<p class="p1"><span class="s1">var response = document.getElementById("conversationDiv");</span></p>
+<p class="p1"><span class="s1">var p = document.createElement("p");</span></p>
+<p class="p1"><span class="s1">p.style.wordWrap = "break-word";</span></p>
+<p class="p1"><span class="s1">p.appendChild(document.createTextNode(message));</span></p>
+<p class="p1"><span class="s1">response.appendChild(p);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">&lt;/script&gt; &lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
